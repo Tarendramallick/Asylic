@@ -1,0 +1,169 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                  INFLUENCER HUB - OTP VERIFICATION SYSTEM                      ║
+║                           QUICK REFERENCE CARD                                 ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─ ENVIRONMENT SETUP ─────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  Add to .env.local:                                                              │
+│                                                                                  │
+│  EMAIL_SERVICE=gmail                                                             │
+│  EMAIL_USER=your-email@gmail.com                                                 │
+│  EMAIL_PASSWORD=your-app-specific-password                                       │
+│  EMAIL_FROM=your-email@gmail.com                                                 │
+│                                                                                  │
+│  For Gmail: Use App Password (not regular password)                              │
+│  For Outlook: Use regular email + password                                       │
+│  For Others: Check provider documentation                                        │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ OTP SPECIFICATIONS ────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  Format: 6-digit numeric OTP                                                     │
+│  Valid For: 10 minutes                                                           │
+│  Max Attempts: 5 tries                                                           │
+│  Resend Cooldown: 30 seconds                                                     │
+│  Storage: MongoDB (auto-cleanup)                                                 │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ SIGNUP FLOW ───────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  1. User fills signup form (creator or brand)                                    │
+│  2. Clicks "Complete Signup"                                                     │
+│  3. System sends OTP to email via Nodemailer                                     │
+│  4. OTP modal appears with countdown timer                                       │
+│  5. User enters 6-digit OTP                                                      │
+│  6. System verifies OTP against MongoDB                                          │
+│  7. Account created + User logged in                                             │
+│  8. Redirected to dashboard                                                      │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ API ENDPOINTS ─────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  SEND OTP                                                                        │
+│  POST /api/auth/send-otp                                                         │
+│  {                                                                                │
+│    "email": "user@example.com",                                                  │
+│    "userName": "John Doe",                                                       │
+│    "isResend": false                                                             │
+│  }                                                                                │
+│                                                                                  │
+│  VERIFY OTP                                                                      │
+│  POST /api/auth/verify-otp                                                       │
+│  {                                                                                │
+│    "email": "user@example.com",                                                  │
+│    "otp": "123456"                                                               │
+│  }                                                                                │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ FILES CREATED/UPDATED ────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  NEW FILES:                                                                      │
+│  • lib/otp.ts                          - OTP utilities (214 lines)                │
+│  • components/auth/otp-verification.tsx - OTP modal (205 lines)                  │
+│  • app/api/auth/send-otp/route.ts     - Send endpoint (53 lines)                │
+│  • app/api/auth/verify-otp/route.ts   - Verify endpoint (35 lines)              │
+│  • OTP_SETUP_GUIDE.md                 - Complete documentation                  │
+│  • OTP_FEATURE_SUMMARY.md              - Feature overview                       │
+│                                                                                  │
+│  UPDATED FILES:                                                                  │
+│  • package.json                        - Added nodemailer, otplib                │
+│  • lib/mongodb.ts                      - Added OTPVerification model             │
+│  • components/auth/creator-signup-form.tsx - Integrated OTP                     │
+│  • components/auth/brand-signup-form.tsx   - Integrated OTP                     │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ KEY FUNCTIONS ────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  generateOTP()                 - Creates random 6-digit OTP                      │
+│  storeOTP(email, otp)          - Saves OTP to MongoDB with TTL                   │
+│  sendOTPEmail(email, otp, name) - Sends OTP via Nodemailer                      │
+│  verifyOTP(email, otp)         - Validates OTP with attempt limiting             │
+│  resendOTP(email, name)        - Handles resend with 30-sec cooldown             │
+│  isOTPVerified(email)          - Checks if email already verified                │
+│  cleanupExpiredOTPs()          - Removes expired records                         │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TESTING CHECKLIST ────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  ✓ Email provider configured and working                                         │
+│  ✓ Environment variables set in .env.local                                       │
+│  ✓ Signup form receives OTP in email                                             │
+│  ✓ OTP input accepts 6 digits only                                               │
+│  ✓ Countdown timer shows 10 minutes                                              │
+│  ✓ Resend button enabled after 30 seconds                                        │
+│  ✓ Wrong OTP shows error after 5 attempts                                        │
+│  ✓ Expired OTP (10+ min) is rejected                                             │
+│  ✓ Account created after successful verification                                 │
+│  ✓ User logged in and redirected to dashboard                                    │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ TROUBLESHOOTING ──────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  PROBLEM: Email not received                                                     │
+│  SOLUTION: Check EMAIL_USER, EMAIL_PASSWORD in .env.local                       │
+│            For Gmail: Verify app-specific password                               │
+│            Check spam folder                                                     │
+│                                                                                  │
+│  PROBLEM: OTP expired immediately                                                │
+│  SOLUTION: Check system time is correct                                          │
+│            Verify MongoDB connection                                             │
+│                                                                                  │
+│  PROBLEM: Cannot resend OTP                                                      │
+│  SOLUTION: Wait at least 30 seconds from last request                            │
+│            Check if already verified                                             │
+│                                                                                  │
+│  PROBLEM: "Too many attempts" message                                            │
+│  SOLUTION: Request new OTP via resend                                            │
+│            Wait 10 minutes for OTP to expire                                     │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ GMAIL APP PASSWORD SETUP ─────────────────────────────────────────────────────┐
+│                                                                                  │
+│  1. Go to myaccount.google.com                                                   │
+│  2. Click "Security" in left menu                                                │
+│  3. Enable "2-Step Verification" if not enabled                                  │
+│  4. Search for "App passwords"                                                   │
+│  5. Select "Mail" and your device                                                │
+│  6. Copy the generated 16-character password                                     │
+│  7. Use as EMAIL_PASSWORD in .env.local                                          │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ PRODUCTION DEPLOYMENT ────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  VERCEL:                                                                         │
+│  1. Go to Project Settings > Environment Variables                               │
+│  2. Add EMAIL_SERVICE, EMAIL_USER, EMAIL_PASSWORD, EMAIL_FROM                    │
+│  3. Redeploy project                                                             │
+│                                                                                  │
+│  HEROKU/SELF-HOSTED:                                                             │
+│  1. Set environment variables on server                                          │
+│  2. Restart application                                                          │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ USEFUL LINKS ─────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│  Setup Guide: OTP_SETUP_GUIDE.md                                                │
+│  Feature Summary: OTP_FEATURE_SUMMARY.md                                        │
+│  Nodemailer Docs: https://nodemailer.com/                                       │
+│  MongoDB TTL: https://docs.mongodb.com/manual/core/index-ttl/                   │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+
+QUICK START:
+1. npm install
+2. Add EMAIL_SERVICE, EMAIL_USER, EMAIL_PASSWORD to .env.local
+3. npm run dev
+4. Test at /signup?role=creator
+
+Questions? Check OTP_SETUP_GUIDE.md for complete documentation.
